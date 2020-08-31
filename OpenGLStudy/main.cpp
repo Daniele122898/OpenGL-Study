@@ -1,10 +1,121 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 // Screen and window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
+
+GLuint VAO, VBO, shader;
+
+// Temporary Vertex Shader
+static const char* vertexShader = "#version 330									\n\
+layout (location = 0) in vec3 pos;												\n\
+void main()																		\n\
+{																				\n\
+	gl_Position = vec4(0.4* pos.x, 0.4* pos.y, pos.z, 1.0); // gl_Position is the output of this shader	\n\
+}																				\n\
+";
+
+// Temporary fragment shader
+static const char* fragShader = "#version 330									\n\
+out vec4 color;																	\n\
+void main()																		\n\
+{																				\n\
+	color = vec4(1.0f, 0.0f, 0.0f, 1.0);										\n\
+}																				\n\
+";
+
+void CreateTriangle()
+{
+	// Create triangle first
+	GLfloat vertices[] = {
+		-1.0f, -1.0f, 0.0f, // Bottom right corner
+		1.0f, -1.0f, 0.0f, // Bottom left corner
+		0.0f, 1.0f, 0.0f, // Middle of top
+	};
+
+	// Create VAO, :(amount of array we want to create, where to store the ID of the array)
+	glGenVertexArrays(1, &VAO); // Will now create space in GPU memory and return ID for VAO
+	glBindVertexArray(VAO); // Now bind this VAO.
+	{
+		// Create VBO, :(amount of buffers we want to create, where to store the ID of the buffer)
+		glGenBuffers(1, &VBO);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); // Static draw: Won't change values once in
+
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
+
+	}
+	glBindVertexArray(0); // Unbind VAO
+}
+
+void AddShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType)
+{
+	GLuint shaderId = glCreateShader(shaderType); // Create empty shader of that type
+
+	const GLchar* shCode[1];
+	shCode[0] = shaderCode;
+
+	GLint codeLength[1];
+	codeLength[0] = strlen(shaderCode);
+
+	glShaderSource(shaderId, 1, shCode, codeLength);
+	glCompileShader(shaderId);
+
+	// Get error codes from shader compilation
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glGetShaderiv(shaderId, GL_COMPILE_STATUS, &result); // Check if compilation worked
+	if (!result)
+	{
+		glGetShaderInfoLog(shaderId, sizeof(eLog), NULL, eLog);
+		printf("Error compiling the %d shader: '%s'\n", shaderType, eLog);
+		return;
+	}
+
+	glAttachShader(shaderProgram, shaderId);
+}
+
+void CompileShaders()
+{
+	shader = glCreateProgram(); // Create shader program and return ID
+	if (!shader)
+	{
+		printf("Error creating shader program! \n");
+		return;
+	}
+
+	AddShader(shader, vertexShader, GL_VERTEX_SHADER);
+	AddShader(shader, fragShader, GL_FRAGMENT_SHADER);
+
+	// Get error codes from shader creation
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glLinkProgram(shader); // create the shader
+	glGetProgramiv(shader, GL_LINK_STATUS, &result); // Check if linking worked
+	if (!result)
+	{
+		glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
+		printf("Error linking program: '%s'\n", eLog);
+		return;
+	}
+
+	glValidateProgram(shader); // Check if shader is valid in current OpenGL context
+	glGetProgramiv(shader, GL_VALIDATE_STATUS, &result); // Check if validation worked
+	if (!result)
+	{
+		glGetProgramInfoLog(shader, sizeof(eLog), NULL, eLog);
+		printf("Error validating program: '%s'\n", eLog);
+		return;
+	}
+}
 
 int main()
 {
@@ -52,6 +163,10 @@ int main()
 
 	// Setup viewport size
 	glViewport(0, 0, bufferWidth, bufferHeight); // set width and height to the actual size inside the window we got when getting the buffer sizes
+
+	// Create triangle
+	CreateTriangle();
+	CompileShaders();
 	
 	// loop until window closed
 	while (!glfwWindowShouldClose(mainWindow))
@@ -63,6 +178,16 @@ int main()
 		glClearColor(1.0f, 0.0f, 1.0f, 1);
 		glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer (since each pixel can have more than just color data [depth etc...])
 
+		glUseProgram(shader);
+
+		glBindVertexArray(VAO);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		
+		glBindVertexArray(0);
+		
+		glUseProgram(0); // Unbind shader program
+		
 		glfwSwapBuffers(mainWindow); // You have 2 buffers, One that is seen and one that is being drawn to. So you just exchange those (double buffer)
 	}
 	
