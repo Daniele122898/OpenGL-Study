@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -12,18 +11,14 @@
 
 #include "Mesh.h"
 #include "Shader.h"
+#include "GLWindow.h"
 
-// Screen and window dimensions
-const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
+
+GLWindow mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
-
-bool directionRight = true;
-float triOffset = 0.0f;
-float triMaxOffset = 0.7f;
-float triIncrement = 0.0005f;
 
 float currRot = 0;
 
@@ -65,53 +60,8 @@ void CreateShaders()
 
 int main()
 {
-	// Initialize GLFW
-	if(!glfwInit())
-	{
-		printf("Failed to initialize GLFW");
-		glfwTerminate();
-		return 1;
-	}
-
-	// Setup GLFW window properties
-	// With OpenGL version
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3); // This amounts to OpenGL version 3.3
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Won't be backwards compatible. So wont use old deprecated stuff
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Will be forward compatible
-
-	GLFWwindow* mainWindow = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Study", NULL, NULL);
-	if (!mainWindow)
-	{
-		printf("Failed to create GLFW window");
-		glfwTerminate();
-		return 1;
-	}
-
-	// Get the buffer size information
-	int bufferWidth, bufferHeight;
-	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight); // Pass reference so glfw can put the values inside :D
-
-	// set context for GLEW to use (incase of multiple windows)
-	glfwMakeContextCurrent(mainWindow);
-
-	// Allow modern extension features
-	glewExperimental = GL_TRUE;
-
-	// Initialize lib
-	if (glewInit() != GLEW_OK)
-	{
-		printf("Failed to initialize GLEW");
-		glfwDestroyWindow(mainWindow);
-		glfwTerminate();
-		return 1;
-	}
-
-	// Enable depth buffer
-	glEnable(GL_DEPTH_TEST);
-	
-	// Setup viewport size
-	glViewport(0, 0, bufferWidth, bufferHeight); // set width and height to the actual size inside the window we got when getting the buffer sizes
+	mainWindow = GLWindow(800, 600);
+	mainWindow.Initialise();
 
 	// Create triangle
 	CreateObjects();
@@ -119,30 +69,16 @@ int main()
 
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
-		static_cast<GLfloat>(bufferWidth) / static_cast<GLfloat>(bufferHeight),
+		static_cast<GLfloat>(mainWindow.GetBufferWidth()) / static_cast<GLfloat>(mainWindow.GetBufferHeight()),
 		0.1f, 100.0f);
 
 	GLuint uniformProjection = 0, uniformModel = 0;
 	
 	// loop until window closed
-	while (!glfwWindowShouldClose(mainWindow))
+	while (!mainWindow.GetShouldClose())
 	{
 		// Get and handle user input events
 		glfwPollEvents();
-
-		if (directionRight)
-		{
-			triOffset += triIncrement;
-		}
-		else
-		{
-			triOffset -= triIncrement;
-		}
-
-		if (abs(triOffset) >= triMaxOffset)
-		{
-			directionRight = !directionRight;
-		}
 
 		// rotate
 		currRot += 0.3f;
@@ -185,7 +121,7 @@ int main()
 		// glUseProgram(0); // Unbind shader program
 		Shader::UnbindShader();
 		
-		glfwSwapBuffers(mainWindow); // You have 2 buffers, One that is seen and one that is being drawn to. So you just exchange those (double buffer)
+		mainWindow.SwapBuffers(); // You have 2 buffers, One that is seen and one that is being drawn to. So you just exchange those (double buffer)
 	}
 	
 	

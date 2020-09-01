@@ -9,7 +9,7 @@ Shader::Shader()
 
 void Shader::CreateFromString(const char* vertexCode, const char* fragCode)
 {
-	CompileShader(vertexCode, fragCode);
+	compileShader(vertexCode, fragCode);
 }
 
 void Shader::CreateFromFiles(const char* vertexPath, const char* fragPath)
@@ -19,7 +19,7 @@ void Shader::CreateFromFiles(const char* vertexPath, const char* fragPath)
 	const char* vertexCode = vertexString.c_str();
 	const char* fragCode = fragString.c_str();
 
-	CompileShader(vertexCode, fragCode);
+	compileShader(vertexCode, fragCode);
 }
 
 std::string Shader::ReadFile(const char* path) const
@@ -81,7 +81,7 @@ void Shader::UnbindShader()
 	glUseProgram(0);
 }
 
-void Shader::CompileShader(const char* vertexCode, const char* fragCode)
+void Shader::compileShader(const char* vertexCode, const char* fragCode)
 {
 	shaderId = glCreateProgram(); // Create shader program and return ID
 	if (!shaderId)
@@ -90,8 +90,8 @@ void Shader::CompileShader(const char* vertexCode, const char* fragCode)
 		return;
 	}
 
-	AddShader(shaderId, vertexCode, GL_VERTEX_SHADER);
-	AddShader(shaderId, fragCode, GL_FRAGMENT_SHADER);
+	addShader(shaderId, vertexCode, GL_VERTEX_SHADER);
+	addShader(shaderId, fragCode, GL_FRAGMENT_SHADER);
 
 	// Get error codes from shader creation
 	GLint result = 0;
@@ -120,7 +120,7 @@ void Shader::CompileShader(const char* vertexCode, const char* fragCode)
 	uniformProjection = glGetUniformLocation(shaderId, "projection");
 }
 
-void Shader::AddShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType)
+void Shader::addShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType)
 {
 	GLuint shader = glCreateShader(shaderType); // Create empty shader of that type
 

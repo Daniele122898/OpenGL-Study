@@ -30,7 +30,7 @@ public:
 private:
 	GLuint shaderId, uniformProjection, uniformModel;
 
-	void CompileShader(const char* vertexCode, const char* fragCode);
-	static void AddShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType);
+	void compileShader(const char* vertexCode, const char* fragCode);
+	static void addShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType);
 };
 
