@@ -23,22 +23,22 @@ float triIncrement = 0.0005f;
 // Temporary Vertex Shader
 static const char* vertexShader = "#version 330									\n\
 layout (location = 0) in vec3 pos;												\n\
-out vec3 vPos;																	\n\
 uniform mat4 model;															\n\
+out vec4 vCol;																	\n\
 void main()																		\n\
 {																				\n\
-	vPos = pos;						\n\
-	gl_Position = model * vec4(vPos, 1.0); // gl_Position is the output of this shader	\n\
+	gl_Position = model * vec4(pos, 1.0); // gl_Position is the output of this shader	\n\
+	vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);						\n\
 }																				\n\
 ";
 
 // Temporary fragment shader
 static const char* fragShader = "#version 330									\n\
+in vec4 vCol; \n\
 out vec4 color;																	\n\
-in vec3 vPos; \n\
 void main()																		\n\
 {																				\n\
-	color = vec4(vPos.x * 1.0f, vPos.y * 1.0f, 0.0f, 1.0);										\n\
+	color = vCol;										\n\
 }																				\n\
 ";
 
@@ -77,7 +77,7 @@ void AddShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType)
 	shCode[0] = shaderCode;
 
 	GLint codeLength[1];
-	codeLength[0] = strlen(shaderCode);
+	codeLength[0] = static_cast<GLint>(strlen(shaderCode));
 
 	glShaderSource(shaderId, 1, shCode, codeLength);
 	glCompileShader(shaderId);
