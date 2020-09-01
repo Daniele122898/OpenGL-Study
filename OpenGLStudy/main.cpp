@@ -13,7 +13,7 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
-GLuint VAO, VBO, EBO, shader, uniformModel; // model matrix calculates the world pos from the model specific origin pos
+GLuint VAO, VBO, EBO, shader, uniformModel, uniformProjection; // model matrix calculates the world pos from the model specific origin pos
 
 bool directionRight = true;
 float triOffset = 0.0f;
@@ -26,10 +26,11 @@ float currRot = 0;
 static const char* vertexShader = "#version 330									\n\
 layout (location = 0) in vec3 pos;												\n\
 uniform mat4 model;															\n\
+uniform mat4 projection;															\n\
 out vec4 vCol;																	\n\
 void main()																		\n\
 {																				\n\
-	gl_Position = model * vec4(pos, 1.0); // gl_Position is the output of this shader	\n\
+	gl_Position = projection * model * vec4(pos, 1.0); // gl_Position is the output of this shader	\n\
 	vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);						\n\
 }																				\n\
 ";
@@ -149,6 +150,7 @@ void CompileShaders()
 
 	// Get uniform Id
 	uniformModel = glGetUniformLocation(shader, "model");
+	uniformProjection = glGetUniformLocation(shader, "projection");
 }
 
 int main()
@@ -204,6 +206,11 @@ int main()
 	// Create triangle
 	CreateTriangle();
 	CompileShaders();
+
+	// Projection doesn't change so no need to recalculate
+	glm::mat4 projection = glm::perspective(45.0f, 
+		static_cast<GLfloat>(bufferWidth) / static_cast<GLfloat>(bufferHeight),
+		0.1f, 100.0f);
 	
 	// loop until window closed
 	while (!glfwWindowShouldClose(mainWindow))
@@ -240,7 +247,7 @@ int main()
 
 		// Order of these transformations is very important. If you rotate first and then translate you would also rotate the translation
 		// thus the triangle would move at 45° instead of the X axis!
-		// model = glm::translate(model, glm::vec3(triOffset, 0.f, 0.0f));
+		model = glm::translate(model, glm::vec3(0.f, 0.f, -2.5f));
 		// The triangle will be distorted because we dont use a projection matrix. The triangle is created based on the
 		// viewport dimensions. Thus if you'd rotate the triangle by 90° it would be stretched and distorted. We need to use
 		// a projection matrix to tell it to scale to 'world positions' so when it gets rotate it would keep its aspect ratio and size
@@ -249,6 +256,7 @@ int main()
 
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 		
 		glBindVertexArray(VAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
