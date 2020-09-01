@@ -1,3 +1,5 @@
+#define STB_IMAGE_IMPLEMENTATION
+
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -13,6 +15,7 @@
 #include "Shader.h"
 #include "GLWindow.h"
 #include "Camera.h"
+#include "Texture.h"
 
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
@@ -20,12 +23,13 @@ const float toRadians = 3.14159265f / 180.f; // Degrees times this will give rad
 GLWindow mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
-Camera* camera;
+Camera camera;
+
+Texture brickTexture;
+Texture dirtTexture;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
-
-float currRot = 0;
 
 static const char* vertexShader = "Shaders/shader.vert";
 static const char* fragShader = "Shaders/shader.frag";
@@ -41,18 +45,19 @@ void CreateObjects()
 	
 	// Create triangle first
 	GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f, // Bottom left corner
-		0.0f, -1.0f, 1.0f, // for pyramid go into Z
-		1.0f, -1.0f, 0.0f, // Bottom right corner
-		0.0f, 1.0f, 0.0f, // Middle of top
+	//  x		y		z		u     v
+		-1.0f,	-1.0f,	0.0f,	0.f,  0.f,	// Bottom left corner
+		0.0f,	-1.0f,	1.0f,	0.5f, 0.f,	// for pyramid go into Z
+		1.0f,	-1.0f,	0.0f,	1.f,  0.f,	// Bottom right corner
+		0.0f,	1.0f,	0.0f,	0.5f, 1.f,		// Middle of top
 	};
 
 	Mesh* mesh = new Mesh();
-	mesh->CreateMesh(vertices, indices, 12, 12);
+	mesh->CreateMesh(vertices, indices, 20, 12);
 	meshList.push_back(mesh);
 
 	Mesh* mesh2 = new Mesh();
-	mesh2->CreateMesh(vertices, indices, 12, 12);
+	mesh2->CreateMesh(vertices, indices, 20, 12);
 	meshList.push_back(mesh2);
 }
 
@@ -72,10 +77,16 @@ int main()
 	CreateObjects();
 	CreateShaders();
 
-	camera = new Camera(
+	camera = Camera(
 		glm::vec3(0.0f), 
 		glm::vec3(0.0f, 1.0f, 0.0f), 
 		-90.f, 0.f, 5.0f, 0.1f);
+
+	brickTexture = Texture((char*)"Textures/brick.png");
+	brickTexture.LoadTexture();
+
+	dirtTexture = Texture((char*)"Textures/dirt.png");
+	dirtTexture.LoadTexture();
 
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
@@ -94,13 +105,8 @@ int main()
 		// Get and handle user input events
 		glfwPollEvents();
 
-		camera->KeyControl(mainWindow.GetKeys(), deltaTime);
-		camera->MouseControl(mainWindow.GetXChange(), mainWindow.GetYChange());
-
-		// rotate
-		currRot += 0.3f;
-		if (currRot >= 360)
-			currRot = -360;
+		camera.KeyControl(mainWindow.GetKeys(), deltaTime);
+		camera.MouseControl(mainWindow.GetXChange(), mainWindow.GetYChange());
 
 		// Clear the window
 		glClearColor(0.0f, 0.0f, 0.0f, 1);
@@ -116,24 +122,23 @@ int main()
 		// Order of these transformations is very important. If you rotate first and then translate you would also rotate the translation
 		// thus the triangle would move at 45° instead of the X axis!
 		model = glm::translate(model, glm::vec3(0.f, -0.5f, -2.5f));
-		// The triangle will be distorted because we dont use a projection matrix. The triangle is created based on the
-		// viewport dimensions. Thus if you'd rotate the triangle by 90° it would be stretched and distorted. We need to use
-		// a projection matrix to tell it to scale to 'world positions' so when it gets rotate it would keep its aspect ratio and size
-		model = glm::rotate(model, currRot * toRadians, glm::vec3(0.f, 1.f, 0.0f)); // Rotate around Z axis from origin
 		model = glm::scale(model, glm::vec3(.3f, .3f, 0.3f));
 
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
+		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.CalculateViewMatrix()));
+
+		brickTexture.UseTexture();
 		
 		meshList[0]->RenderMesh();
 
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.f, .5f, -2.5f));
-		model = glm::rotate(model, -currRot * toRadians, glm::vec3(0.f, 1.f, 0.0f));
 		model = glm::scale(model, glm::vec3(.5f, .5f, 1.f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+
+		dirtTexture.UseTexture();
 		
 		meshList[1]->RenderMesh();
 

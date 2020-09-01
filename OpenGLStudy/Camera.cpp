@@ -1,5 +1,18 @@
 #include "Camera.h"
 
+Camera::Camera()
+{
+	position = glm::vec3(0.f);
+	worldUp = glm::vec3(0.f);
+	yaw = 0.f;
+	pitch = 0.f;
+	front = glm::vec3(0.0f, 0.0f, -1.0f);
+
+	movementSpeed = 0;
+	turnSpeed = 0;
+
+}
+
 Camera::Camera(glm::vec3 initialPosition, glm::vec3 initialUp, GLfloat initialYaw, GLfloat initialPitch, GLfloat moveSpeed, GLfloat turnSpeed)
 {
 	position = initialPosition;

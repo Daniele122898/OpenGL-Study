@@ -27,8 +27,13 @@ void Mesh::CreateMesh(GLfloat* vertices, unsigned* indices, unsigned numOfVertic
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * numOfVertices, vertices, GL_STATIC_DRAW); // Static draw: Won't change values once in
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	// We need to set a stride so it knows which values are vertices and which are the UV mappings
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, 0);
 	glEnableVertexAttribArray(0);
+
+	// The last parameter is an offset. We have 2 uv values each 5 values but with an initial offset of 3.
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]) * 5, (void*)(sizeof(vertices[0]) * 3));
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
 	// =============

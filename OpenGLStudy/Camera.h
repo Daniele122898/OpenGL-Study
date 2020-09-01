@@ -8,6 +8,7 @@
 class Camera
 {
 public:
+	Camera();
 	Camera(glm::vec3 initialPosition, glm::vec3 initialUp, GLfloat initialYaw, GLfloat initialPitch, GLfloat moveSpeed, GLfloat turnSpeed);
 
 	void KeyControl(bool* keys, GLfloat deltaTime);
@@ -16,6 +17,7 @@ public:
 	glm::mat4 CalculateViewMatrix();
 	
 	~Camera();
+	
 
 private:
 	glm::vec3 position;
