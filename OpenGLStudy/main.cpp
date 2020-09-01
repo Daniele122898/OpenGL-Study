@@ -11,6 +11,7 @@
 
 // Screen and window dimensions
 const GLint WIDTH = 800, HEIGHT = 600;
+const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
 GLuint VAO, VBO, shader, uniformModel; // model matrix calculates the world pos from the model specific origin pos
 
@@ -212,7 +213,11 @@ int main()
 		glUseProgram(shader);
 
 		glm::mat4 model = glm::mat4(1.0f); // Initialise as identity matrix
-		model = glm::translate(model, glm::vec3(triOffset, triOffset, 0.0f));
+
+		// Order of these transformations is very important. If you rotate first and then translate you would also rotate the translation
+		// thus the triangle would move at 45° instead of the X axis!
+		model = glm::translate(model, glm::vec3(triOffset, 0.f, 0.0f));
+		model = glm::rotate(model, 45 * toRadians, glm::vec3(0.f, 0.f, 1.0f)); // Rotate around Z axis from origin
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		
