@@ -4,12 +4,18 @@ GLWindow::GLWindow()
 {
 	width = 800;
 	height = 600;
+	bufferWidth = 0;
+	bufferHeight = 0;
+	mainWindow = nullptr;
 }
 
 GLWindow::GLWindow(GLint windowWidth, GLint windowHeight)
 {
 	width = windowWidth;
 	height = windowHeight;
+	bufferWidth = 0;
+	bufferHeight = 0;
+	mainWindow = nullptr;
 }
 
 int GLWindow::Initialise()
