@@ -12,6 +12,7 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "GLWindow.h"
+#include "Camera.h"
 
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
@@ -19,6 +20,10 @@ const float toRadians = 3.14159265f / 180.f; // Degrees times this will give rad
 GLWindow mainWindow;
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
+Camera* camera;
+
+GLfloat deltaTime = 0.0f;
+GLfloat lastTime = 0.0f;
 
 float currRot = 0;
 
@@ -60,25 +65,37 @@ void CreateShaders()
 
 int main()
 {
-	mainWindow = GLWindow(800, 600);
+	mainWindow = GLWindow(1600, 900);
 	mainWindow.Initialise();
 
 	// Create triangle
 	CreateObjects();
 	CreateShaders();
 
+	camera = new Camera(
+		glm::vec3(0.0f), 
+		glm::vec3(0.0f, 1.0f, 0.0f), 
+		-90.f, 0.f, 5.0f, 0.1f);
+
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
 		static_cast<GLfloat>(mainWindow.GetBufferWidth()) / static_cast<GLfloat>(mainWindow.GetBufferHeight()),
 		0.1f, 100.0f);
 
-	GLuint uniformProjection = 0, uniformModel = 0;
+	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
 	
 	// loop until window closed
 	while (!mainWindow.GetShouldClose())
 	{
+		GLfloat now = glfwGetTime();
+		deltaTime = now - lastTime;
+		lastTime = now;
+
 		// Get and handle user input events
 		glfwPollEvents();
+
+		camera->KeyControl(mainWindow.GetKeys(), deltaTime);
+		camera->MouseControl(mainWindow.GetXChange(), mainWindow.GetYChange());
 
 		// rotate
 		currRot += 0.3f;
@@ -92,6 +109,7 @@ int main()
 		shaderList[0]->UseShader();
 		uniformModel = shaderList[0]->GetModelLocation();
 		uniformProjection = shaderList[0]->GetProjectionLocation();
+		uniformView = shaderList[0]->GetViewLocation();
 
 		glm::mat4 model = glm::mat4(1.0f); // Initialise as identity matrix
 
@@ -107,6 +125,7 @@ int main()
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
 		
 		meshList[0]->RenderMesh();
 
