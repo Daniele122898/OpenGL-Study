@@ -13,12 +13,14 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
-GLuint VAO, VBO, shader, uniformModel; // model matrix calculates the world pos from the model specific origin pos
+GLuint VAO, VBO, EBO, shader, uniformModel; // model matrix calculates the world pos from the model specific origin pos
 
 bool directionRight = true;
 float triOffset = 0.0f;
 float triMaxOffset = 0.7f;
 float triIncrement = 0.0005f;
+
+float currRot = 0;
 
 // Temporary Vertex Shader
 static const char* vertexShader = "#version 330									\n\
@@ -44,9 +46,17 @@ void main()																		\n\
 
 void CreateTriangle()
 {
+	unsigned int indices[] = {
+		0, 3, 1, // side
+		1, 3, 2, // side
+		2, 3, 0, // front
+		0, 1, 2 // bottom
+	};
+	
 	// Create triangle first
 	GLfloat vertices[] = {
 		-1.0f, -1.0f, 0.0f, // Bottom left corner
+		0.0f, -1.0f, 1.0f, // for pyramid go into Z
 		1.0f, -1.0f, 0.0f, // Bottom right corner
 		0.0f, 1.0f, 0.0f, // Middle of top
 	};
@@ -55,6 +65,11 @@ void CreateTriangle()
 	glGenVertexArrays(1, &VAO); // Will now create space in GPU memory and return ID for VAO
 	glBindVertexArray(VAO); // Now bind this VAO.
 	{
+		// Create and bind EBO
+		glGenBuffers(1, &EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+		
 		// Create VBO, :(amount of buffers we want to create, where to store the ID of the buffer)
 		glGenBuffers(1, &VBO);
 		glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -67,6 +82,7 @@ void CreateTriangle()
 
 	}
 	glBindVertexArray(0); // Unbind VAO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // Unbind EBO
 }
 
 void AddShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType)
@@ -179,6 +195,9 @@ int main()
 		return 1;
 	}
 
+	// Enable depth buffer
+	glEnable(GL_DEPTH_TEST);
+	
 	// Setup viewport size
 	glViewport(0, 0, bufferWidth, bufferHeight); // set width and height to the actual size inside the window we got when getting the buffer sizes
 
@@ -206,9 +225,14 @@ int main()
 			directionRight = !directionRight;
 		}
 
+		// rotate
+		currRot += 0.3f;
+		if (currRot >= 360)
+			currRot = -360;
+
 		// Clear the window
 		glClearColor(1.0f, 0.0f, 1.0f, 1);
-		glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer (since each pixel can have more than just color data [depth etc...])
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the color buffer (since each pixel can have more than just color data [depth etc...])
 
 		glUseProgram(shader);
 
@@ -216,21 +240,24 @@ int main()
 
 		// Order of these transformations is very important. If you rotate first and then translate you would also rotate the translation
 		// thus the triangle would move at 45° instead of the X axis!
-		model = glm::translate(model, glm::vec3(triOffset, 0.f, 0.0f));
+		// model = glm::translate(model, glm::vec3(triOffset, 0.f, 0.0f));
 		// The triangle will be distorted because we dont use a projection matrix. The triangle is created based on the
 		// viewport dimensions. Thus if you'd rotate the triangle by 90° it would be stretched and distorted. We need to use
 		// a projection matrix to tell it to scale to 'world positions' so when it gets rotate it would keep its aspect ratio and size
-		// model = glm::rotate(model, 45 * toRadians, glm::vec3(0.f, 0.f, 1.0f)); // Rotate around Z axis from origin
+		model = glm::rotate(model, currRot * toRadians, glm::vec3(0.f, 1.f, 0.0f)); // Rotate around Z axis from origin
 		model = glm::scale(model, glm::vec3(.5f, .5f, 1.f));
 
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 		
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
+		// glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
 		
 		glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		
 		glUseProgram(0); // Unbind shader program
 		
