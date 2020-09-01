@@ -12,18 +12,21 @@ GLuint VAO, VBO, shader;
 // Temporary Vertex Shader
 static const char* vertexShader = "#version 330									\n\
 layout (location = 0) in vec3 pos;												\n\
+out vec3 vPos; \n\
 void main()																		\n\
 {																				\n\
-	gl_Position = vec4(0.4* pos.x, 0.4* pos.y, pos.z, 1.0); // gl_Position is the output of this shader	\n\
+	vPos = vec3(0.8* pos.x, 0.8* pos.y, pos.z); \n\
+	gl_Position = vec4(0.8* pos.x, 0.8* pos.y, pos.z, 1.0); // gl_Position is the output of this shader	\n\
 }																				\n\
 ";
 
 // Temporary fragment shader
 static const char* fragShader = "#version 330									\n\
 out vec4 color;																	\n\
+in vec3 vPos; \n\
 void main()																		\n\
 {																				\n\
-	color = vec4(1.0f, 0.0f, 0.0f, 1.0);										\n\
+	color = vec4(vPos.x * 1.0f, vPos.y * 1.0f, 0.0f, 1.0);										\n\
 }																				\n\
 ";
 
@@ -31,8 +34,8 @@ void CreateTriangle()
 {
 	// Create triangle first
 	GLfloat vertices[] = {
-		-1.0f, -1.0f, 0.0f, // Bottom right corner
-		1.0f, -1.0f, 0.0f, // Bottom left corner
+		-1.0f, -1.0f, 0.0f, // Bottom left corner
+		1.0f, -1.0f, 0.0f, // Bottom right corner
 		0.0f, 1.0f, 0.0f, // Middle of top
 	};
 
