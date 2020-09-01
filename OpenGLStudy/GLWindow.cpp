@@ -66,6 +66,7 @@ int GLWindow::Initialise()
 
 	// Setup viewport size
 	glViewport(0, 0, bufferWidth, bufferHeight); // set width and height to the actual size inside the window we got when getting the buffer sizes
+	return 0;
 }
 
 GLWindow::~GLWindow()
