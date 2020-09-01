@@ -27,7 +27,7 @@ out vec3 vPos;																	\n\
 uniform mat4 model;															\n\
 void main()																		\n\
 {																				\n\
-	vPos = vec3(0.8 * pos.x, 0.8* pos.y, pos.z);						\n\
+	vPos = vec3(0.4 * pos.x, 0.4* pos.y, pos.z);						\n\
 	gl_Position = model * vec4(vPos, 1.0); // gl_Position is the output of this shader	\n\
 }																				\n\
 ";
@@ -217,6 +217,9 @@ int main()
 		// Order of these transformations is very important. If you rotate first and then translate you would also rotate the translation
 		// thus the triangle would move at 45° instead of the X axis!
 		model = glm::translate(model, glm::vec3(triOffset, 0.f, 0.0f));
+		// The triangle will be distorted because we dont use a projection matrix. The triangle is created based on the
+		// viewport dimensions. Thus if you'd rotate the triangle by 90° it would be stretched and distorted. We need to use
+		// a projection matrix to tell it to scale to 'world positions' so when it gets rotate it would keep its aspect ratio and size
 		model = glm::rotate(model, 45 * toRadians, glm::vec3(0.f, 0.f, 1.0f)); // Rotate around Z axis from origin
 		
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
