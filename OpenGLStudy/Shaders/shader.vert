@@ -12,7 +12,8 @@ out vec2 TexCoord;
 void main()
 {																				
 	gl_Position = projection * view * model * vec4(pos, 1.0); // gl_Position is the output of this shader	
-	vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);						
+	float c = clamp(pos.y, 0.0f, 1.0f);
+	vCol = vec4(c,c,c, 1.0f);						
 
 	TexCoord = tex;
 }
