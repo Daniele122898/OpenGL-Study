@@ -17,11 +17,13 @@ public:
 
 	std::string ReadFile(const char* path) const;
 
-	GLuint GetProjectionLocation() const;
-	GLuint GetModelLocation() const;
-	GLuint GetViewLocation() const;
-	GLuint GetAmbientIntensityLocation() const;
-	GLuint GetAmbientColorLocation() const;
+	GLuint GetProjectionLocation() { return uniformProjection; }
+	GLuint GetModelLocation() const { return uniformModel; }
+	GLuint GetViewLocation() const { return uniformView; }
+	GLuint GetAmbientIntensityLocation() const { return uniformAmbientIntensity; }
+	GLuint GetAmbientColorLocation() const 	{ return uniformAmbientColor; }
+	GLuint GetDiffuseDirectionLocation() const { return uniformDiffuseDirection; }
+	GLuint GetDiffuseIntensityLocation() const { return uniformDiffuseIntensity; }
 
 	void UseShader() const;
 	void ClearShader();
@@ -31,7 +33,8 @@ public:
 	static void UnbindShader();
 
 private:
-	GLuint shaderId, uniformProjection, uniformModel, uniformView, uniformAmbientIntensity, uniformAmbientColor;
+	GLuint shaderId, uniformProjection, uniformModel, uniformView,
+		uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDiffuseDirection;
 
 	void compileShader(const char* vertexCode, const char* fragCode);
 	static void addShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType);
