@@ -10,6 +10,7 @@ uniform mat4 view;
 out vec4 vCol;
 out vec2 TexCoord;
 out vec3 Normal;
+out vec3 FragPos;
 
 void main()
 {																				
@@ -21,4 +22,7 @@ void main()
 
 	// Don't want the transformations in the last column of the model since it would fuck our normals
 	Normal = mat3(transpose(inverse(model))) * norms;
+
+	// We need the world pos of that vertex and only the xyz vec 3 values.
+	FragPos = (model * vec4(pos, 1.0f)).xyz;
 }
