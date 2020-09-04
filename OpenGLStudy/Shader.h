@@ -7,6 +7,11 @@
 
 #include <GL/glew.h>
 
+
+#include "Constants.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+
 class Shader
 {
 public:
@@ -21,15 +26,18 @@ public:
 	GLuint GetModelLocation() const { return uniformModel; }
 	GLuint GetViewLocation() const { return uniformView; }
 	
-	GLuint GetAmbientIntensityLocation() const { return uniformAmbientIntensity; }
-	GLuint GetAmbientColorLocation() const 	{ return uniformAmbientColor; }
+	GLuint GetAmbientIntensityLocation() const { return uniformDirectionalLight.uniformAmbientIntensity; }
+	GLuint GetAmbientColorLocation() const 	{ return uniformDirectionalLight.uniformAmbientColor; }
 
-	GLuint GetDiffuseDirectionLocation() const { return uniformDiffuseDirection; }
-	GLuint GetDiffuseIntensityLocation() const { return uniformDiffuseIntensity; }
+	GLuint GetDiffuseDirectionLocation() const { return uniformDirectionalLight.uniformDiffuseDirection; }
+	GLuint GetDiffuseIntensityLocation() const { return uniformDirectionalLight.uniformDiffuseIntensity; }
 
 	GLuint GetSpecularIntensityLocation() const { return uniformSpecularIntensity; }
 	GLuint GetShininessLocation() const { return uniformShininess; }
 	GLuint GetEyeLocation() const { return uniformEyePosition; }
+
+	void SetDirectionalLight(DirectionalLight* directionalLight);
+	void SetPointLight(PointLight* pLight, int lightCount);
 
 	void UseShader() const;
 	void ClearShader();
@@ -40,8 +48,30 @@ public:
 
 private:
 	GLuint shaderId, uniformProjection, uniformModel, uniformView,
-		uniformAmbientIntensity, uniformAmbientColor, uniformDiffuseIntensity, uniformDiffuseDirection,
 		uniformEyePosition, uniformSpecularIntensity, uniformShininess;
+
+	struct
+	{
+		GLuint uniformAmbientColor;
+		GLuint uniformAmbientIntensity;
+		GLuint uniformDiffuseIntensity;
+
+		GLuint uniformDiffuseDirection;
+	} uniformDirectionalLight;
+
+	GLuint uniformPointLightCount;
+	struct
+	{
+		GLuint uniformAmbientColor;
+		GLuint uniformAmbientIntensity;
+		GLuint uniformDiffuseIntensity;
+
+		GLuint uniformPosition;
+		GLuint uniformConstant;
+		GLuint uniformLinear;
+		GLuint uniformExponent;
+	} uniformPointLight[MAX_POINT_LIGHTS];
+
 
 	void compileShader(const char* vertexCode, const char* fragCode);
 	static void addShader(GLuint shaderProgram, const char* shaderCode, GLenum shaderType);

@@ -18,6 +18,8 @@
 #include "Texture.h"
 #include "DirectionalLight.h"
 #include "Material.h"
+#include "Constants.h"
+#include "PointLight.h"
 
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
@@ -34,6 +36,7 @@ Material shinyMaterial;
 Material dullMaterial;
 
 DirectionalLight mainLight;
+PointLight pointLights[MAX_POINT_LIGHTS];
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
@@ -111,6 +114,23 @@ void CreateObjects()
 	Mesh* mesh2 = new Mesh();
 	mesh2->CreateMesh(vertices, indices, 32, 12);
 	meshList.push_back(mesh2);
+
+	unsigned int floorIndices[] = {
+		0, 2, 1, // go anti-clock wise from top left to bottom left to top right
+		1, 2, 3
+	};
+
+	// Create flat floor, use 10 for uv so it tiles and repeats, with manual normals so its perfectly flat
+	GLfloat floorVertices[] = {
+		-10.f, 0.0f, -10.f,		0.0f, 0.0f,		0.0f, -1.0f, 0.0f, // top left
+		10.0f, 0.0f, -10.f,		10.0f, 0.0f,	0.0f, -1.0f, 0.0f, // top right
+		-10.0f, 0.0f, 10.f,		0.0f, 10.0f,	0.0f, -1.0f, 0.0f, // bottom left
+		10.0f, 0.0f, 10.f,		10.0f, 10.0f,	0.0f, -1.0f, 0.0f, // bottom right
+	};
+
+	Mesh* mesh3 = new Mesh();
+	mesh3->CreateMesh(floorVertices, floorIndices, 32, 6);
+	meshList.push_back(mesh3);
 }
 
 void CreateShaders()
@@ -146,14 +166,28 @@ int main()
 	mainLight = DirectionalLight(1.f, 1.f, 1.f, 0.2f, 0.6f, 
 								2.0f, -1.0f, -2.f);
 
+	int pointLightCount = 0;
+	
+	pointLights[0] = PointLight(0.f, 1.f, 0.f, 
+		0.1f, 1.0f, 
+		0.f, 1.5f, -7.f,
+		0.3f, 0.2f, 0.1f);
+
+	++pointLightCount;
+
+	pointLights[1] = PointLight(0.5f, 0.f, 1.f,
+		0.2f, 0.8f,
+		6.f, -2.f, -2.f,
+		0.3f, 0.2f, 0.1f);
+
+	++pointLightCount;
+
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
 		static_cast<GLfloat>(mainWindow.GetBufferWidth()) / static_cast<GLfloat>(mainWindow.GetBufferHeight()),
 		0.1f, 100.0f);
 
 	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0,
-			uniformAmbientIntensity = 0, uniformAmbientColor = 0,
-			uniformDirection = 0, uniformDiffuseIntensity = 0,
 			uniformEyePosition = 0, uniformSpecularIntensity = 0, uniformShininess = 0;
 	
 	// loop until window closed
@@ -178,18 +212,15 @@ int main()
 		uniformProjection = shaderList[0]->GetProjectionLocation();
 		uniformView = shaderList[0]->GetViewLocation();
 		
-		uniformAmbientColor = shaderList[0]->GetAmbientColorLocation();
-		uniformAmbientIntensity= shaderList[0]->GetAmbientIntensityLocation();
-
-		uniformDirection = shaderList[0]->GetDiffuseDirectionLocation();
-		uniformDiffuseIntensity = shaderList[0]->GetDiffuseIntensityLocation();
-		
 		uniformSpecularIntensity = shaderList[0]->GetSpecularIntensityLocation();
 		uniformShininess = shaderList[0]->GetShininessLocation();
 		uniformEyePosition = shaderList[0]->GetEyeLocation();
 
-		mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, 
-							uniformDiffuseIntensity, uniformDirection);
+		shaderList[0]->SetDirectionalLight(&mainLight);
+		shaderList[0]->SetPointLight(pointLights, pointLightCount);
+
+		// mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, 
+		// 					uniformDiffuseIntensity, uniformDirection);
 
 		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.CalculateViewMatrix()));
@@ -219,6 +250,17 @@ int main()
 		dullMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 		meshList[1]->RenderMesh();
+
+		// Floor
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.f, -2.f, 0.f));
+		//model = glm::scale(model, glm::vec3(.5f, .5f, 1.f));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+
+		dirtTexture.UseTexture();
+		shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
+
+		meshList[2]->RenderMesh();
 
 		// glUseProgram(0); // Unbind shader program
 		Shader::UnbindShader();
