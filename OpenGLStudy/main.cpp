@@ -16,7 +16,7 @@
 #include "GLWindow.h"
 #include "Camera.h"
 #include "Texture.h"
-#include "Light.h"
+#include "DirectionalLight.h"
 #include "Material.h"
 
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
@@ -33,7 +33,7 @@ Texture dirtTexture;
 Material shinyMaterial;
 Material dullMaterial;
 
-Light mainLight;
+DirectionalLight mainLight;
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
@@ -143,8 +143,8 @@ int main()
 	shinyMaterial = Material(1.f, 64.f);
 	dullMaterial = Material(0.3f, 8.f);
 
-	mainLight = Light(1.f, 1.f, 1.f, 0.2f, 
-						2.0f, -1.0f, -2.f, 0.6f);
+	mainLight = DirectionalLight(1.f, 1.f, 1.f, 0.2f, 0.6f, 
+								2.0f, -1.0f, -2.f);
 
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
