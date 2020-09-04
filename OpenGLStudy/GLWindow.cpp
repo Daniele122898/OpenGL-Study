@@ -54,6 +54,9 @@ int GLWindow::Initialise()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // Won't be backwards compatible. So wont use old deprecated stuff
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Will be forward compatible
 
+	glfwWindowHint(GLFW_SAMPLES, 4);
+	glEnable(GL_MULTISAMPLE);
+	
 	mainWindow = glfwCreateWindow(width, height, "OpenGL Study", NULL, NULL);
 	if (!mainWindow)
 	{

@@ -31,9 +31,11 @@ Camera camera;
 
 Texture brickTexture;
 Texture dirtTexture;
+Texture floorTexture;
 
 Material shinyMaterial;
 Material dullMaterial;
+Material floorMaterial;
 
 DirectionalLight mainLight;
 PointLight pointLights[MAX_POINT_LIGHTS];
@@ -160,10 +162,14 @@ int main()
 	dirtTexture = Texture((char*)"Textures/dirt.png");
 	dirtTexture.LoadTexture();
 
+	floorTexture = Texture((char*)"Textures/floor.jpg", GL_RGB);
+	floorTexture.LoadTexture();
+
 	shinyMaterial = Material(1.f, 64.f);
 	dullMaterial = Material(0.3f, 8.f);
+	floorMaterial = Material(0.8f, 256.f);
 
-	mainLight = DirectionalLight(1.f, 1.f, 1.f, 0.2f, 0.6f, 
+	mainLight = DirectionalLight(1.f, 1.f, 1.f, 0.4f, 0.8f, 
 								2.0f, -1.0f, -2.f);
 
 	int pointLightCount = 0;
@@ -257,8 +263,8 @@ int main()
 		//model = glm::scale(model, glm::vec3(.5f, .5f, 1.f));
 		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
-		dirtTexture.UseTexture();
-		shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
+		floorTexture.UseTexture();
+		floorMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 		meshList[2]->RenderMesh();
 
