@@ -5,10 +5,10 @@ Texture::Texture()
 	textureId = 0;
 	width = height = bitDepth = 0;
 	imageFormat = GL_RGBA;
-	filePath = (char*)"";
+	filePath = "";
 }
 
-Texture::Texture(char* filePath)
+Texture::Texture(const char* filePath)
 {
 	textureId = 0;
 	width = height = bitDepth = 0;
@@ -16,7 +16,7 @@ Texture::Texture(char* filePath)
 	this->filePath = filePath;
 }
 
-Texture::Texture(char* filePath, GLint imageFormat)
+Texture::Texture(const char* filePath, GLint imageFormat)
 {
 	textureId = 0;
 	width = height = bitDepth = 0;
@@ -24,13 +24,13 @@ Texture::Texture(char* filePath, GLint imageFormat)
 	this->imageFormat = imageFormat;
 }
 
-void Texture::LoadTexture()
+bool Texture::LoadTexture()
 {
 	unsigned char* texData = stbi_load(filePath, &width, &height, &bitDepth, 0);
 	if (!texData)
 	{
 		printf("Failed to find texture: %s\n", filePath);
-		return;
+		return false;
 	}
 
 	glGenTextures(1, &textureId);
@@ -47,6 +47,7 @@ void Texture::LoadTexture()
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	stbi_image_free(texData); // Free data up again since its in GPU now
+	return true;
 }
 
 void Texture::UseTexture()

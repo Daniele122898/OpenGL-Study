@@ -19,6 +19,7 @@
 #include "DirectionalLight.h"
 #include "Material.h"
 #include "Constants.h"
+#include "Model.h"
 #include "PointLight.h"
 #include "SpotLight.h"
 
@@ -158,20 +159,26 @@ int main()
 		glm::vec3(0.0f, 1.0f, 0.0f), 
 		-90.f, 0.f, 5.0f, 0.1f);
 
-	brickTexture = Texture((char*)"Textures/brick.png");
+	brickTexture = Texture("Textures/brick.png");
 	brickTexture.LoadTexture();
 
-	dirtTexture = Texture((char*)"Textures/dirt.png");
+	dirtTexture = Texture("Textures/dirt.png");
 	dirtTexture.LoadTexture();
 
-	floorTexture = Texture((char*)"Textures/floor.jpg", GL_RGB);
+	floorTexture = Texture("Textures/floor.jpg", GL_RGB);
 	floorTexture.LoadTexture();
 
 	shinyMaterial = Material(1.f, 64.f);
 	dullMaterial = Material(0.3f, 8.f);
 	floorMaterial = Material(0.8f, 256.f);
 
-	mainLight = DirectionalLight(1.f, 1.f, 0.7f, 0.1f, 0.3f, 
+	Model bugatti;
+	bugatti.LoadModel("Models/uh60.obj");
+
+	Model ironMan;
+	ironMan.LoadModel("Models/IronMan.obj");
+	
+	mainLight = DirectionalLight(1.f, 1.f, 0.7f, 0.2f, 0.5f, 
 								2.0f, -1.0f, -2.f);
 
 	int pointLightCount = 0;
@@ -193,7 +200,7 @@ int main()
 	int spotLightCount = 0;
 
 	spotLights[0] = SpotLight(1.f, 1.f, 1.f,
-		0.1f, 2.0f,
+		0.1f, 0.5f,
 		0.f, 1.5f, -7.f,
 		0.3f, 0.2f, 0.1f,
 		0.0f, -1.f, 0.1f, 20.f);
@@ -207,7 +214,7 @@ int main()
 
 	GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0,
 			uniformEyePosition = 0, uniformSpecularIntensity = 0, uniformShininess = 0;
-	
+
 	// loop until window closed
 	while (!mainWindow.GetShouldClose())
 	{
@@ -235,7 +242,7 @@ int main()
 		uniformEyePosition = shaderList[0]->GetEyeLocation();
 
 		glm::vec3 lowerLight = camera.GetCameraPosition();
-		lowerLight.y -= 0.3f;
+		// lowerLight.y -= 0.3f;
 		
 		spotLights[0].SetFlash(lowerLight, camera.GetCameraDirection());
 
@@ -285,6 +292,30 @@ int main()
 		floorMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
 
 		meshList[2]->RenderMesh();
+
+
+		// Bugatti
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.f, 5.f, 0.f));
+		model = glm::rotate(model, -90.f * toRadians, glm::vec3(1.f, 0.f, 0.f));
+		//model = glm::scale(model, glm::vec3(.01f, .01f, 0.01f));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+
+		shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
+
+		bugatti.RenderModel();
+
+		// ironMan
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.f, -2.f, 0.f));
+		model = glm::scale(model, glm::vec3(.01f, .01f, 0.01f));
+		glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+
+		shinyMaterial.UseMaterial(uniformSpecularIntensity, uniformShininess);
+
+		ironMan.RenderModel();
+
+		
 
 		// glUseProgram(0); // Unbind shader program
 		Shader::UnbindShader();

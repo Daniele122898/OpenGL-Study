@@ -10,10 +10,11 @@ class Texture
 {
 public:
 	Texture();
-	Texture(char* filePath);
-	Texture(char* filePath, GLint imageFormat);
+	Texture(const char* filePath);
+	Texture(const char* filePath, GLint imageFormat);
 
-	void LoadTexture();
+	bool LoadTexture();
+
 	void UseTexture();
 	void ClearTexture();
 
@@ -24,6 +25,6 @@ private:
 	GLuint imageFormat;
 	int width, height, bitDepth;
 
-	char* filePath;
+	const char* filePath;
 };
 
