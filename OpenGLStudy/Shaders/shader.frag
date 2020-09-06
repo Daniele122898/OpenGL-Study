@@ -8,6 +8,7 @@ in vec3 FragPos;
 out vec4 color;
 
 const int MAX_POINT_LIGHTS = 3;
+const int MAX_SPOT_LIGHTS = 3;
 
 struct Light {
 	vec3 color;
@@ -30,6 +31,13 @@ struct PointLight {
 	float exponent;
 };
 
+struct SpotLight {
+	PointLight base;
+
+	vec3 direction;
+	float edge;
+};
+
 struct Material {
 	float specularIntensity;
 	float shininess;
@@ -39,6 +47,9 @@ uniform DirectionalLight directionalLight;
 
 uniform int pointLightCount;
 uniform PointLight pointLights[MAX_POINT_LIGHTS];
+
+uniform int spotLightCount;
+uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 
 
 uniform sampler2D tex;
@@ -76,23 +87,52 @@ vec4 CalcDirectionalLight() {
 	return CalcLightByDirection(directionalLight.base, directionalLight.direction);
 }
 
+vec4 CalcPointLight(PointLight pLight) {
+	// Calculate direction of point Light
+	vec3 direction = FragPos - pLight.position;
+
+	float distance = length(direction);
+	direction = normalize(direction);
+
+	vec4 color = CalcLightByDirection(pLight.base, direction); // Until here we basically calculated a directional Light
+
+	float attenuation = pLight.exponent * distance * distance + 
+						pLight.linear * distance +
+						pLight.constant;
+
+	return (color / attenuation);
+}
+
 vec4 CalcPointLights() {
 	vec4 totalColor = vec4(0,0,0,0);
 
 	for(int i = 0; i < pointLightCount; i++) {
-		// Calculate direction of point Light
-		vec3 direction = FragPos - pointLights[i].position;
+		totalColor += CalcPointLight(pointLights[i]);
+	}
 
-		float distance = length(direction);
-		direction = normalize(direction);
+	return totalColor;
+}
 
-		vec4 color = CalcLightByDirection(pointLights[i].base, direction); // Until here we basically calculated a directional Light
+vec4 CalcSpotLight(SpotLight spLight){
+	vec3 rayDirection = normalize(FragPos - spLight.base.position); // Direction from spotlight to fragment
+	float slFactor = dot(rayDirection, spLight.direction); // Get angle from direction of spotlight and rayDirection.
 
-		float attenuation = pointLights[i].exponent * distance * distance + 
-							pointLights[i].linear * distance +
-							pointLights[i].constant;
+	if (slFactor > spLight.edge) { // The larger the slFactor the more inline it becomes with the ray
+		vec4 color = CalcPointLight(spLight.base);
+		// Since the processed edge and slFactor might be rly close and thus only give us a range of 
+		// 0.98 - 1 we cannot use that difference to create a outwards fade. We must strech those values over 
+		// a 0-1 scale to have a better fade
+		return color * (1.0f - (1.f - slFactor) * (1.f/(1.f - spLight.edge)));
+	} else {
+		return vec4(0,0,0,0);
+	}
+}
 
-		totalColor += (color / attenuation);
+vec4 CalcSpotLights() {
+	vec4 totalColor = vec4(0,0,0,0);
+
+	for(int i = 0; i < spotLightCount; i++) {
+		totalColor += CalcSpotLight(spotLights[i]);
 	}
 
 	return totalColor;
@@ -102,6 +142,7 @@ void main()
 {
 	vec4 finalColor = CalcDirectionalLight();
 	finalColor += CalcPointLights();
+	finalColor += CalcSpotLights();
 
 	color = texture(tex, TexCoord) * finalColor;
 }

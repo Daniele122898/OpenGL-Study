@@ -19,7 +19,7 @@ public:
 	
 	~PointLight();
 
-private:
+protected:
 	glm::vec3 position;
 
 	GLfloat constant, linear, exponent; // 3 values for the attenuation (drop-off over distance) in quadratic function

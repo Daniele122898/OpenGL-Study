@@ -20,6 +20,7 @@
 #include "Material.h"
 #include "Constants.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 
 const float toRadians = 3.14159265f / 180.f; // Degrees times this will give radians
 
@@ -39,6 +40,7 @@ Material floorMaterial;
 
 DirectionalLight mainLight;
 PointLight pointLights[MAX_POINT_LIGHTS];
+SpotLight spotLights[MAX_SPOT_LIGHTS];
 
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
@@ -169,24 +171,34 @@ int main()
 	dullMaterial = Material(0.3f, 8.f);
 	floorMaterial = Material(0.8f, 256.f);
 
-	mainLight = DirectionalLight(1.f, 1.f, 1.f, 0.4f, 0.8f, 
+	mainLight = DirectionalLight(1.f, 1.f, 0.7f, 0.1f, 0.3f, 
 								2.0f, -1.0f, -2.f);
 
 	int pointLightCount = 0;
 	
 	pointLights[0] = PointLight(0.f, 1.f, 0.f, 
-		0.1f, 1.0f, 
-		0.f, 1.5f, -7.f,
+		0.1f, 0.3f, 
+		0.f, 1.5f, 7.f,
 		0.3f, 0.2f, 0.1f);
 
 	++pointLightCount;
 
 	pointLights[1] = PointLight(0.5f, 0.f, 1.f,
-		0.2f, 0.8f,
+		0.2f, 0.3f,
 		6.f, -2.f, -2.f,
 		0.3f, 0.2f, 0.1f);
 
 	++pointLightCount;
+
+	int spotLightCount = 0;
+
+	spotLights[0] = SpotLight(1.f, 1.f, 1.f,
+		0.1f, 2.0f,
+		0.f, 1.5f, -7.f,
+		0.3f, 0.2f, 0.1f,
+		0.0f, -1.f, 0.1f, 20.f);
+
+	++spotLightCount;
 
 	// Projection doesn't change so no need to recalculate
 	glm::mat4 projection = glm::perspective(45.0f, 
@@ -222,8 +234,14 @@ int main()
 		uniformShininess = shaderList[0]->GetShininessLocation();
 		uniformEyePosition = shaderList[0]->GetEyeLocation();
 
+		glm::vec3 lowerLight = camera.GetCameraPosition();
+		lowerLight.y -= 0.3f;
+		
+		spotLights[0].SetFlash(lowerLight, camera.GetCameraDirection());
+
 		shaderList[0]->SetDirectionalLight(&mainLight);
-		shaderList[0]->SetPointLight(pointLights, pointLightCount);
+		shaderList[0]->SetPointLights(pointLights, pointLightCount);
+		shaderList[0]->SetSpotLights(spotLights, spotLightCount);
 
 		// mainLight.UseLight(uniformAmbientIntensity, uniformAmbientColor, 
 		// 					uniformDiffuseIntensity, uniformDirection);
